@@ -2,7 +2,7 @@ const express = require('express')
 const cors = require('cors')
 const cron = require('node-cron')
 require('dotenv').config()
-const getTransactionsFromNearIndexerDatabase = require('./model/near_indexer_repository')
+const {getTransactionsFromNearIndexerDatabase, getTransactionsFromPaymentReference} = require('./model/near_indexer_repository')
 const getServerConfig = require('../src/near-utility-server.config')
 const serverConfig = getServerConfig(process.env.NODE_ENV || 'development')
 
@@ -36,6 +36,15 @@ app.use(express.json())
 app.get('/', (req, res) => {
     res.send('Hello World!')
 })
+
+app.get('/payments/:paymentAddress/:paymentReference', async (req, res) => {
+    try {
+        const data = await getTransactionsFromPaymentReference(req.params.paymentAddress, req.params.paymentReference);
+        res.json({ success: true, data });
+    } catch(e) {
+        return res.status(500).send({ success: false, error: e.message})
+    }
+});
 
 app.get('/transactions-from-indexer', async (req, res) => {
     try {
